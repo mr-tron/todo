@@ -4,6 +4,7 @@ import json
 import argparse
 from datetime import datetime
 
+
 STORE_PATH = os.path.join(os.path.expanduser('~'), '.todo')
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
 LIST_HELP = """List tasks. Optional sub-argumets: 
@@ -25,46 +26,19 @@ def uuid4():
 
 
 class Colors(object):
-    _color = {
-        'reset': '\033[00m',
-        'bold': '\033[01m',
-        'disable': '\033[02m',
-        'underline': '\033[04m',
-        'reverse': '\033[07m',
-        'strikethrough': '\033[09m',
-        'invisible': '\033[08m',
-
-        'black': '\033[30m',
-        'red': '\033[31m',
-        'green': '\033[32m',
-        'orange': '\033[33m',
-        'blue': '\033[34m',
-        'purple': '\033[35m',
-        'cyan': '\033[36m',
-        'lightgrey': '\033[37m',
-        'darkgrey': '\033[90m',
-        'lightred': '\033[91m',
-        'lightgreen': '\033[92m',
-        'yellow': '\033[93m',
-        'lightblue': '\033[94m',
-        'pink': '\033[95m',
-        'lightcyan': '\033[96m',
-
-        'bg_black': '\033[40m',
-        'bg_red': '\033[41m',
-        'bg_green': '\033[42m',
-        'bg_orange': '\033[43m',
-        'bg_blue': '\033[44m',
-        'bg_purple': '\033[45m',
-        'bg_cyan': '\033[46m',
-        'bg_lightgrey': '\033[47m'
-    }
-
+    _color = {'reset': '00m', 'bold': '01m', 'disable': '02m', 'underline': '04m',
+              'reverse': '07m', 'strikethrough': '09m', 'invisible': '08m', 'black': '30m',
+              'red': '31m', 'green': '32m', 'orange': '33m', 'blue': '34m', 'purple': '35m',
+              'cyan': '36m', 'lightgrey': '37m', 'darkgrey': '90m', 'lightred': '91m',
+              'lightgreen': '92m', 'yellow': '93m', 'lightblue': '94m', 'pink': '95m',
+              'lightcyan': '96m', 'bg_black': '40m', 'bg_red': '41m', 'bg_green': '42m',
+              'bg_orange': '43m', 'bg_blue': '44m', 'bg_purple': '45m', 'bg_cyan': '46m',
+              'bg_lightgrey': '47m'}
     def __getattr__(self, item):
         color = self._color[item]
 
         def _f(text):
-            return color + str(text) + self._color['reset']
+            return '\033[' + color + str(text) + '\033[' + self._color['reset']
         return _f
 
 
@@ -161,13 +135,20 @@ class TasksStore(object):
         for i, t in enumerate(self.tasks):
             t.order = i + 1
 
+    def find_duplicate(self, task):
+        for t in self.tasks:
+            if t.text == task.text:
+                return t
+
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-l', '--list', help=LIST_HELP, action='store_true')
+    group.add_argument('-s', '--sort', help="Sort tasks. Tasks sort automatical after each ", action='store_true') #
     group.add_argument('-d', '--done', help="Mark task as done.\n Example: -d 10", type=int)
-    parser.add_argument('-p', '--priority', help=PRIORITY_HELP, default=0)
+    group.add_argument('-e', '--edit', help="Edit record.\n Example: -d 10", type=int)
+    parser.add_argument('-p', '--priority', help=PRIORITY_HELP, default=0)  # todo: make priority nullable
     parser.add_argument('text', nargs='*', default=[], help=TASK_HELP)
     args = parser.parse_args()
 
@@ -185,13 +166,34 @@ def main():
             print(t.console_view())
         print("Displayed %s%s/%s tasks" % ("last " if n<0 else "", min(abs(n), len(tasks)), len(tasks_store.tasks)))
     elif args.done:
-            tasks_store.tasks[args.done-1].done = True
-            tasks_store.sort()
+        task = tasks_store.tasks[args.done - 1]
+        task.done = True
+        print('Done: %s' % task.console_view())
+        tasks_store.save()
+    elif args.edit:
+        if args.text:
+            tasks_store.tasks[args.edit-1].text = ' '.join(args.text)
+        if args.priority:
+            tasks_store.tasks[args.edit-1].priority = int(args.priority)
+        if args.priority or args.text:
             tasks_store.save()
+    elif args.sort:
+        tasks_store.sort()
+        tasks_store.save()
+        print("Sorted.")
     elif args.text:
         text = ' '.join(args.text)
         task = Task.from_text(text)
-        if args.priority: task.priority = int(args.priority)
+        dup = tasks_store.find_duplicate(task)
+        if dup:
+            print("duplicate: %s" % dup.console_view())
+            reply = ''
+            while reply.lower() not in ('y', 'n', 'yes', 'no'):
+                reply = input("Create duplicated task? Y/n: ")
+            if reply.lower() not in ('y', 'yes'):
+                    return
+        if args.priority:
+            task.priority = int(args.priority)
         print(str(task))
         tasks_store.tasks.append(task)
         tasks_store.sort()
