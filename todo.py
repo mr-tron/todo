@@ -47,7 +47,6 @@ class MyEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, Task):
             return {k: v for k, v in o.__dict__.items() if k != 'order'}
-
         elif isinstance(o, datetime):
             return o.strftime(DATE_FORMAT)
         else:
@@ -55,7 +54,7 @@ class MyEncoder(json.JSONEncoder):
 
 
 class Task(object):
-    def __init__(self,  **kwargs):
+    def __init__(self, **kwargs):
         self.text = kwargs.get('text', '') or ''
         try:
             self.creation_date = datetime.strptime(kwargs.get('creation_date', '1970-01-01T00:00:01'), DATE_FORMAT)
@@ -128,8 +127,7 @@ class TasksStore(object):
             tasks = self.tasks
         if count >= 0:
             return tasks[:count]
-        else:
-            return tasks[count:]
+        return tasks[count:]
 
     def sort(self):
         self.tasks.sort(key=lambda x: (not x.done, x.priority, x.creation_date), reverse=True)
@@ -140,6 +138,7 @@ class TasksStore(object):
         for t in self.tasks:
             if t.text == task.text:
                 return t
+        return None
 
 
 def main():
@@ -192,7 +191,7 @@ def main():
             while reply.lower() not in ('y', 'n', 'yes', 'no'):
                 reply = input("Create duplicated task? Y/n: ")
             if reply.lower() not in ('y', 'yes'):
-                    return
+                return
         if args.priority:
             task.priority = int(args.priority)
         print(str(task))
