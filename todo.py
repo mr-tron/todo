@@ -7,10 +7,10 @@ from datetime import datetime
 
 STORE_PATH = os.path.join(os.path.expanduser('~'), '.todo')
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
-LIST_HELP = """List tasks. Optional sub-argumets: 
+LIST_HELP = """List tasks. Optional sub-argumets:
 n/-n - for n first/last tasks. 
 +project/@context - for filtering by context and projects"""
-TASK_HELP = """Text of new task. 
+TASK_HELP = """Text of new task.
 Start with n symbols ! or 1 for setting priority n.
 Mark any +word for grouping by +projects. 
 Mention some @person or @context."""
