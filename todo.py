@@ -34,6 +34,7 @@ class Colors(object):
               'lightcyan': '96m', 'bg_black': '40m', 'bg_red': '41m', 'bg_green': '42m',
               'bg_orange': '43m', 'bg_blue': '44m', 'bg_purple': '45m', 'bg_cyan': '46m',
               'bg_lightgrey': '47m'}
+
     def __getattr__(self, item):
         color = self._color[item]
 
@@ -45,7 +46,7 @@ class Colors(object):
 class MyEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, Task):
-            return {k: v for k, v in o.__dict__.items() if k!= 'order'}
+            return {k: v for k, v in o.__dict__.items() if k != 'order'}
 
         elif isinstance(o, datetime):
             return o.strftime(DATE_FORMAT)
@@ -145,7 +146,7 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-l', '--list', help=LIST_HELP, action='store_true')
-    group.add_argument('-s', '--sort', help="Sort tasks. Tasks sort automatical after each ", action='store_true') #
+    group.add_argument('-s', '--sort', help="Sort tasks. Tasks sort automatical after each ", action='store_true')
     group.add_argument('-d', '--done', help="Mark task as done.\n Example: -d 10", type=int)
     group.add_argument('-e', '--edit', help="Edit record.\n Example: -d 10", type=int)
     parser.add_argument('-p', '--priority', help=PRIORITY_HELP, default=0)  # todo: make priority nullable
@@ -164,7 +165,7 @@ def main():
         tasks = tasks_store.list(n, filter_word)
         for t in tasks:
             print(t.console_view())
-        print("Displayed %s%s/%s tasks" % ("last " if n<0 else "", min(abs(n), len(tasks)), len(tasks_store.tasks)))
+        print("Displayed %s%s/%s tasks" % ("last " if n < 0 else "", min(abs(n), len(tasks)), len(tasks_store.tasks)))
     elif args.done:
         task = tasks_store.tasks[args.done - 1]
         task.done = True
